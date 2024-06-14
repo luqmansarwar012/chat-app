@@ -10,10 +10,39 @@ export const signup = async (req, res) => {
         .json({ success: false, error: "Passwords don't match" });
     }
 
-    const user = await User;
+    // checking wether user already exists
+    const user = await User.findOne({ username });
+    if (user) {
+      return res
+        .status(400)
+        .json({ success: false, error: "User already exists!" });
+    }
+
+    // hash password
+
+    const boyProfilePic = `https://avatar.iran.liara.run/public/boy?username=${username}`;
+    const girlProfilePic = `https://avatar.iran.liara.run/public/boy?username=${username}`;
+    const newUser = new User({
+      fullName,
+      username,
+      password,
+      gender,
+      profilePic: gender === "male" ? boyProfilePic : girlProfilePic,
+    });
+    await newUser.save();
+    res.status(200).json({
+      success: true,
+      _id: newUser._id,
+      fullName: newUser.fullName,
+      username: newUser.username,
+      profilePic: newUser.profilePic,
+    });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: "Something went wrong!" });
+    console.log("Error in signup controller", error);
+    res.json({
+      success: false,
+      message: "Something went wrong in signup controller!",
+    });
   }
 };
 export const login = (req, res) => {
