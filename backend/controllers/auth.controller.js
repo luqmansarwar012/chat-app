@@ -50,7 +50,7 @@ export const signup = async (req, res) => {
       res.status(400).json({ success: false, error: "Invalid user data!" });
     }
   } catch (error) {
-    console.log("Error in signup controller", error);
+    console.log("Error in signup controller", error.message);
     res.status(500).json({
       success: false,
       error: "Something went wrong in signup controller!",
@@ -81,21 +81,21 @@ export const login = async (req, res) => {
       profilePic: user.profilePic,
     });
   } catch (error) {
-    console.log("Something went wrong in login controller!");
+    console.log("Something went wrong in login controller!", error.message);
     res.status(500).json({
       success: false,
       error: "Something went wrong in login controller!",
     });
   }
 };
-export const logout = async (req, res) => {
+export const logout = (req, res) => {
   try {
     res.cookie("jwt", "", { maxAge: 0 });
     res
       .status(200)
       .json({ success: true, message: "Logged out successfully!" });
   } catch (error) {
-    console.log("Something went wrong in logout controller!");
+    console.log("Something went wrong in logout controller!", error.message);
     res.status(500).json({
       success: false,
       error: "Something went wrong in logout controller!",
