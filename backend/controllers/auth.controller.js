@@ -1,7 +1,8 @@
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
-import generateTOkenAndSetCookie from "../utils/generateToken.js";
+import generateTokenAndSetCookie from "../utils/generateToken.js";
 
+// register user controller
 export const signup = async (req, res) => {
   try {
     const { fullName, username, password, confirmPassword, gender } = req.body;
@@ -36,7 +37,7 @@ export const signup = async (req, res) => {
 
     if (newUser) {
       // generate jwt token
-      generateTOkenAndSetCookie(newUser._id, res);
+      generateTokenAndSetCookie(newUser._id, res);
       await newUser.save();
       res.status(200).json({
         success: true,
@@ -50,15 +51,54 @@ export const signup = async (req, res) => {
     }
   } catch (error) {
     console.log("Error in signup controller", error);
-    res.json({
+    res.status(500).json({
       success: false,
-      message: "Something went wrong in signup controller!",
+      error: "Something went wrong in signup controller!",
     });
   }
 };
-export const login = (req, res) => {
-  res.send("logged in");
+export const login = async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    // checking wether username is valid
+    const user = await User.findOne({ username });
+    // verify password
+    const isPasswordCorrect = await bcrypt.compare(
+      password,
+      user?.password || ""
+    );
+    if (!user || !isPasswordCorrect) {
+      return res
+        .status(400)
+        .json({ success: false, error: "Invalid username or password!" });
+    }
+    generateTokenAndSetCookie(user._id, res);
+    res.status(200).json({
+      success: true,
+      _id: user._id,
+      fullName: user.fullName,
+      username: user.username,
+      profilePic: user.profilePic,
+    });
+  } catch (error) {
+    console.log("Something went wrong in login controller!");
+    res.status(500).json({
+      success: false,
+      error: "Something went wrong in login controller!",
+    });
+  }
 };
-export const logout = (req, res) => {
-  res.send("logged out");
+export const logout = async (req, res) => {
+  try {
+    res.cookie("jwt", "", { maxAge: 0 });
+    res
+      .status(200)
+      .json({ success: true, message: "Logged out successfully!" });
+  } catch (error) {
+    console.log("Something went wrong in logout controller!");
+    res.status(500).json({
+      success: false,
+      error: "Something went wrong in logout controller!",
+    });
+  }
 };
